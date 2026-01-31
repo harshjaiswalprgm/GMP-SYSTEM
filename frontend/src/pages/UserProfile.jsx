@@ -164,7 +164,7 @@ const UserProfile = () => {
         </div>
       </section>
 
-      {/* SALARY */}
+      {/* SALARY new commit change  */}
       {canManageSalary && !hideSalaryForUser && (
         <section className="bg-white border rounded-2xl p-6 shadow-sm mt-6">
           <h3 className="text-lg font-semibold mb-4">
