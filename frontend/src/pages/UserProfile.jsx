@@ -6,6 +6,7 @@ import RevenueChart from "../components/RevenueChart";
 import AttendanceChart from "../components/AttendanceChart";
 import { toast } from "react-toastify";
 
+
 const UserProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -129,11 +130,11 @@ const UserProfile = () => {
       {/* PROFILE */}
       <section className="bg-white border rounded-2xl p-6 shadow-sm mb-6">
         <div className="flex flex-col sm:flex-row gap-6">
-          <img
-            src={user.avatar || "/default-avatar.png"}
-            alt={user.name}
-            className="w-24 h-24 rounded-full border object-cover"
-          />
+         <img
+  src={user?.avatar || "/default-avatar.png"}
+  alt={user?.name || "User"}
+  className="w-24 h-24 rounded-full border object-cover"
+/>
 
           <div className="flex-1">
             <h2 className="text-xl font-semibold">{user.name}</h2>
