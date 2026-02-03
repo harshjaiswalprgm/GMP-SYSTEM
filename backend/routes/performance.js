@@ -559,6 +559,8 @@
 
 
 // backend/routes/performance.js
+
+
 import express from "express";
 import mongoose from "mongoose";
 import Revenue from "../models/Revenue.js";
@@ -680,12 +682,79 @@ router.get("/manager-revenue", protect, async (req, res) => {
   }
 });
 
+// /* =====================================================
+//    🏆 TOP PERFORMERS
+//    -----------------------------------------------------
+//    Admin + HR → Company-wide
+//    Manager    → Own team only
+//    GET /api/performance/top?type=daily|weekly|monthly
+// ===================================================== */
+// router.get("/top", protect, async (req, res) => {
+//   try {
+//     if (!["admin", "manager", "hr"].includes(req.user.role)) {
+//       return res.status(403).json({ message: "Unauthorized" });
+//     }
+
+//     const { type = "daily" } = req.query;
+
+//     let startDate = new Date();
+//     startDate.setHours(0, 0, 0, 0);
+
+//     if (type === "weekly") {
+//       startDate.setDate(startDate.getDate() - 6);
+//     }
+
+//     if (type === "monthly") {
+//       startDate = new Date(
+//         startDate.getFullYear(),
+//         startDate.getMonth(),
+//         1
+//       );
+//     }
+
+//     let matchStage = { date: { $gte: startDate } };
+
+//     // Manager → only own team
+//     if (req.user.role === "manager") {
+//       matchStage.manager = new mongoose.Types.ObjectId(req.user._id);
+//     }
+
+//     const limit = type === "monthly" ? 5 : 3;
+
+//     const top = await Revenue.aggregate([
+//       { $match: matchStage },
+//       {
+//         $group: {
+//           _id: "$user",
+//           total: { $sum: "$amount" },
+//         },
+//       },
+//       { $sort: { total: -1 } },
+//       { $limit: limit },
+//     ]);
+
+//     const populated = await User.populate(top, {
+//       path: "_id",
+//       select: "name role avatar",
+//     });
+
+//     res.json(
+//       populated.map((p, index) => ({
+//         rank: index + 1,
+//         userId: p._id._id,
+//         name: p._id.name,
+//         role: p._id.role,
+//         avatar: p._id.avatar,
+//         total: p.total,
+//       }))
+//     );
+//   } catch (error) {
+//     console.error("Top performers error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
 /* =====================================================
    🏆 TOP PERFORMERS
-   -----------------------------------------------------
-   Admin + HR → Company-wide
-   Manager    → Own team only
-   GET /api/performance/top?type=daily|weekly|monthly
 ===================================================== */
 router.get("/top", protect, async (req, res) => {
   try {
@@ -736,20 +805,24 @@ router.get("/top", protect, async (req, res) => {
       select: "name role avatar",
     });
 
-    res.json(
-      populated.map((p, index) => ({
+    // ✅ FILTER NULL USERS + MAP SAFELY
+    const safeResult = populated
+      .filter((p) => p._id) // <-- THIS FIXES THE CRASH
+      .map((p, index) => ({
         rank: index + 1,
         userId: p._id._id,
         name: p._id.name,
         role: p._id.role,
         avatar: p._id.avatar,
         total: p.total,
-      }))
-    );
+      }));
+
+    return res.json(safeResult);
   } catch (error) {
     console.error("Top performers error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 export default router;
