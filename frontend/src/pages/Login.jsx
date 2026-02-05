@@ -701,12 +701,32 @@ const Login = () => {
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-orange-900/70 to-orange-600/70" />
-          <div className="relative z-10 text-center px-8">
-            <h1 className="text-5xl font-extrabold text-white">Glowlogics Management Portal</h1>
-            <p className="mt-4 text-base text-orange-100 max-w-sm">
-              Manage the grind without the chaos.
-            </p>
-          </div>
+         <div className="relative z-10 flex flex-col items-center justify-center text-center px-10">
+  <h1
+    className="
+      text-2xl md:text-2xl lg:text-4xl
+      font-extrabold tracking-tight
+      text-white leading-tight
+      max-w-2xl
+    "
+  >
+    Glowlogics <br />
+    <span className="text-orange-200">
+      Management Portal
+    </span>
+  </h1>
+
+  <p
+    className="
+      mt-5 text-sm md:text-base
+      text-orange-100/90
+      max-w-md leading-relaxed
+    "
+  >
+    Manage the grind without the chaos.
+  </p>
+</div>
+
         </div>
 
         {/* RIGHT LOGIN FORM */}
