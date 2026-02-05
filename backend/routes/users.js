@@ -283,6 +283,9 @@
 
 // export default router;
 
+
+
+
 import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
@@ -465,10 +468,11 @@ router.get("/:id", protect, async (req, res) => {
 });
 
 /* =====================================================
-   UPDATE USER
+   UPDATE USER (FIXED)
 ===================================================== */
 router.put("/:id", protect, async (req, res) => {
   try {
+    // 🔐 Permission check
     if (
       req.user.role !== "admin" &&
       req.user._id.toString() !== req.params.id
@@ -476,18 +480,50 @@ router.put("/:id", protect, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    const updated = await User.findByIdAndUpdate(
+    /* ================= SANITIZATION ================= */
+
+    // ❌ Never allow password update here
+    delete req.body.password;
+    delete req.body.resetPasswordToken;
+    delete req.body.resetPasswordExpires;
+
+    // 🧹 FIX: empty manager breaks MongoDB
+    if (
+      req.body.manager === "" ||
+      req.body.manager === undefined
+    ) {
+      delete req.body.manager;
+    }
+
+    // 🧠 If role does NOT require manager → force null
+    if (!["intern", "employee"].includes(req.body.role)) {
+      req.body.manager = null;
+    }
+
+    /* ================= UPDATE ================= */
+    const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      { $set: req.body },
+      {
+        new: true,
+        runValidators: true,
+      }
     ).select("-password");
 
-    res.json({ success: true, user: updated });
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error("Update error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Update user error:", err);
+    res.status(500).json({
+      message: "Failed to update user",
+      error: err.message,
+    });
   }
 });
+
 
 /* =====================================================
    DELETE USER (ADMIN ONLY)
@@ -559,9 +595,8 @@ router.get("/:id/performance", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 /* =====================================================
-   ADMIN → RESET USER PASSWORD (NEW)
+   ADMIN → RESET USER PASSWORD (FINAL FIX)
 ===================================================== */
 router.post(
   "/:id/reset-password",
@@ -582,16 +617,22 @@ router.post(
         return res.status(404).json({ message: "User not found" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
+      // ✅ IMPORTANT: set plain password
+      user.password = password;
+
+      // ✅ pre("save") will hash ONCE
       await user.save();
 
-      res.json({ success: true, message: "Password updated successfully" });
+      res.json({
+        success: true,
+        message: "Password updated successfully",
+      });
     } catch (err) {
       console.error("Admin reset password error:", err);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 export default router;
