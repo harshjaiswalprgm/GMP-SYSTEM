@@ -30,26 +30,6 @@ const allowedOrigins = [
   "https://glowlogics.in",
 ];
 
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       // Allow requests with no origin (Postman, mobile apps, server-to-server)
-//       if (!origin) return callback(null, true);
-
-//       if (allowedOrigins.includes(origin)) {
-//         return callback(null, true);
-//       }
-
-//       return callback(
-//         new Error(`CORS blocked for origin: ${origin}`),
-//         false
-//       );
-//     },
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
 
 app.use(
   cors({
@@ -67,6 +47,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.set("trust proxy", true);
 
 
 // ✅ Handle preflight requests correctly
