@@ -53,36 +53,44 @@ const AttendancePanel = () => {
     loadTodayAttendance();
   }, [user?._id]);
 
-  const handleMark = async (type) => {
-    try {
-      setErrorMsg("");
+ const handleMark = async (type) => {
+  try {
+    setErrorMsg("");
 
-      await api.post("/attendance/mark", {
-        userId: user._id,
-        type,
-      });
+    await api.post("/attendance/mark", {
+      userId: user._id,
+      type,
+    });
 
-      setAttendance((prev) => ({
-        ...prev,
-        [type]: new Date().toLocaleTimeString(),
-      }));
+    setAttendance((prev) => ({
+      ...prev,
+      [type]: new Date().toLocaleTimeString(),
+    }));
 
-      toast.success(`${type.replace(/([A-Z])/g, " $1")} marked`);
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || "Failed to mark attendance";
-
-      toast.error(msg);
-      setErrorMsg(msg);
-
-      if (
-        err.response?.status === 403 &&
-        msg.toLowerCase().includes("office")
-      ) {
-        setBlocked(true);
-      }
+    // ✅ IF CHECK OUT → LOGOUT IMMEDIATELY
+    if (type === "checkOut") {
+      localStorage.clear();
+      window.location.href = "/";
+      return;
     }
-  };
+
+    toast.success(`${type.replace(/([A-Z])/g, " $1")} marked`);
+  } catch (err) {
+    const msg =
+      err.response?.data?.message || "Failed to mark attendance";
+
+    toast.error(msg);
+    setErrorMsg(msg);
+
+    if (
+      err.response?.status === 403 &&
+      msg.toLowerCase().includes("office")
+    ) {
+      setBlocked(true);
+    }
+  }
+};
+
 
   return (
     <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
